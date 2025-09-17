@@ -114,7 +114,7 @@ class AgentPromptTemplates:
 
 请根据用户的问题和可用工具，决定是直接回答还是使用工具。
 如果需要使用工具，请以以下格式输出：
-<|FunctionCallBegin|>[{"name": "工具名称", "parameters": {"参数名": "参数值"}}]<|FunctionCallEnd|>
+<|FunctionCallBegin|>[{{"name": "工具名称", "parameters": {{"参数名": "参数值"}}}}]<|FunctionCallEnd|>
 
 如果不需要使用工具，请直接回答问题。
 

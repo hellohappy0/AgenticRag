@@ -269,7 +269,16 @@ class TongyiQianwenModel(BaseLanguageModel):
             )
             
             if response.status_code == 200:
-                return response.output.text
+                # 尝试从不同的字段获取响应内容，适配不同的API版本
+                if hasattr(response.output, 'text') and response.output.text:
+                    return response.output.text
+                elif hasattr(response.output, 'choices') and response.output.choices:
+                    # 适配新的响应格式
+                    for choice in response.output.choices:
+                        if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
+                            return choice.message.content
+                # 如果所有尝试都失败，返回空字符串
+                return ""
             else:
                 raise RuntimeError(f"通义千问模型调用失败: {response.message}")
         except Exception as e:

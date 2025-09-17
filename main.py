@@ -2,7 +2,7 @@ from typing import Dict, Any, List
 from src.agent import AgenticRAG
 from src.tool import BaseTool, RetrievalTool, SearchTool
 from src.doc_process import SimpleDocumentProcessor
-from src.env import SimpleAgentEnvironment, MemoryManager
+from src.agent_context import SimpleAgentEnvironment, MemoryManager
 from src.prompt import AgentPromptTemplates
 from src.model import ModelFactory
 from src.config import get_config, config_manager
