@@ -9,54 +9,36 @@ def main():
     主函数，演示Agentic RAG的使用
     """
     print("初始化Agentic RAG系统...")
-    print("系统支持从配置文件(config.yaml)和环境变量加载配置，环境变量优先级高于配置文件。")
+    print("系统支持从配置文件(config.yaml)和环境变量加载配置，默认优先使用环境变量，其次是配置文件。")
     print("环境变量格式: AGENTIC_RAG_{配置键}_...，使用下划线分隔嵌套键。例如: AGENTIC_RAG_MODEL_TONGYI_API_KEY")
     
-    # 获取用户选择的模型类型
-    # 如果配置中已经设置了模型类型，询问用户是否使用配置中的值
-    config_model_type = get_config("model.type", "")
-    if config_model_type:
-        use_config = input(f"检测到配置文件中的模型类型为 '{config_model_type}'，是否使用？(y/n，默认y): ").strip().lower() or "y"
-        if use_config == "y":
-            model_type = config_model_type
-        else:
-            model_type = input("请选择模型类型 (mock/smolagent/tongyi/ollama/auto，默认mock): ").strip().lower() or "mock"
-    else:
-        model_type = input("请选择模型类型 (mock/smolagent/tongyi/ollama/auto，默认mock): ").strip().lower() or "mock"
+    # 获取模型类型，默认优先使用环境变量，其次是配置文件
+    model_type = get_config("model.type", "mock")
+    print(f"使用配置中的模型类型: '{model_type}'")
     
     api_key = None
     custom_model = None
     
     if model_type != "mock" and model_type != "auto":
         if model_type == "tongyi":
-            # 检查配置中是否已有API密钥
+            # 直接使用配置中的通义千问API密钥，默认优先使用环境变量，其次是配置文件
             config_api_key = get_config("model.tongyi.api_key", "")
             if config_api_key:
-                use_config_key = input(f"检测到配置中的通义千问API密钥，是否使用？(y/n，默认y): ").strip().lower() or "y"
-                if use_config_key != "y":
-                    api_key = input("请输入阿里云通义千问的API密钥: ").strip()
+                print("使用配置中的通义千问API密钥")
+                api_key = config_api_key
             else:
-                api_key = input("请输入阿里云通义千问的API密钥: ").strip()
+                print("警告: 未配置通义千问API密钥，请在config.yaml中设置或通过环境变量提供")
         elif model_type == "ollama":
-            # 检查配置中是否已有模型名称
-            config_model_name = get_config("model.ollama.model_name", "")
-            if config_model_name:
-                use_config_model = input(f"检测到配置中的Ollama模型名称为 '{config_model_name}'，是否使用？(y/n，默认y): ").strip().lower() or "y"
-                if use_config_model != "y":
-                    custom_model_input = input("请输入Ollama模型名称 (默认llama3，可选): ").strip()
-                    if custom_model_input:
-                        custom_model = custom_model_input
-            else:
-                custom_model_input = input("请输入Ollama模型名称 (默认llama3，可选): ").strip()
-                if custom_model_input:
-                    custom_model = custom_model_input
+            # 直接使用配置中的Ollama模型名称，默认优先使用环境变量，其次是配置文件
+            config_model_name = get_config("model.ollama.model_name", "llama3")
+            print(f"使用配置中的Ollama模型名称: '{config_model_name}'")
+            custom_model = config_model_name
         else:
-            # 其他模型类型的API密钥处理
+            # 其他模型类型的API密钥处理，默认优先使用环境变量，其次是配置文件
             config_api_key = get_config(f"model.{model_type}.api_key", "")
-            if not config_api_key:
-                api_key_input = input(f"请输入{model_type}的API密钥 (可选): ").strip()
-                if api_key_input:
-                    api_key = api_key_input
+            if config_api_key:
+                print(f"使用配置中的{model_type} API密钥")
+                api_key = config_api_key
     
     # 创建Agentic RAG实例
     agentic_rag = create_agentic_rag(model_type=model_type, api_key=api_key, custom_model=custom_model)

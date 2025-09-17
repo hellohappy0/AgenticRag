@@ -15,5 +15,8 @@ python-docx==1.2.0
 requests==2.32.5
 ddgs==9.6.0
 
+# 向量存储
+faiss-cpu==1.8.0
+
 # 其他
 tqdm==4.67.1

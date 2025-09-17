@@ -9,7 +9,8 @@ from src.agent_context import SimpleAgentEnvironment, MemoryManager
 from src.prompt import AgentPromptTemplates
 from src.model import ModelFactory
 from src.config import get_config
-from src.mock import MockVectorStore, MockLanguageModel
+from src.mock import MockLanguageModel
+from src.vector_store import FAISSVectorStore
 
 
 def create_agentic_rag(model_type: str = "mock", api_key: str = None, custom_model: str = None) -> AgenticRAG:
@@ -45,8 +46,8 @@ def create_agentic_rag(model_type: str = "mock", api_key: str = None, custom_mod
         }
     ]
     
-    # 创建向量存储
-    vector_store = MockVectorStore(mock_documents)
+    # 创建向量存储 - 使用实际的FAISS向量数据库
+    vector_store = FAISSVectorStore(mock_documents)
     
     # 创建搜索工具
     retrieval_tool = RetrievalTool(vector_store)
