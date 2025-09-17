@@ -263,7 +263,8 @@ class AgenticRAG(BaseAgent):
         critique_prompt = self.prompt_manager.generate_prompt(
             "self_critique",
             query=state["query"],
-            answer=state["answer"]
+            answer=state["answer"],
+            context=state["context"]
         )
         
         critique = self.model.generate(critique_prompt)
@@ -278,7 +279,7 @@ class AgenticRAG(BaseAgent):
                 reflection_prompt = self.prompt_manager.generate_prompt(
                     "reflection",
                     query=state["query"],
-                    context=state["context"]
+                    thought_process="根据已获取的信息进行分析思考"
                 )
                 
                 reflection = self.model.generate(reflection_prompt)
