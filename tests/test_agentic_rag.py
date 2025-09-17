@@ -78,20 +78,8 @@ def test_agentic_rag_basic_functionality():
         
         # 创建语言模型
         if model_type.lower() == "mock":
-            # 创建一个简单的Mock模型
-            class MockLanguageModel:
-                def generate(self, prompt):
-                    print(f"Mock模型generate调用，prompt: {prompt[:50]}...")
-                    return "这是Mock模型的响应，我已经处理了你的问题。"
-                
-                def generate_with_tools(self, prompt, tools):
-                    # 确保返回格式正确，避免任何工具调用相关内容
-                    return {
-                        "response": "我是一个AI助手，我可以帮助你回答问题。",
-                        "tool_calls": [],  # 明确不包含任何工具调用
-                        "raw_output": "这是Mock模型带工具的原始输出。"
-                    }
-            
+            # 导入项目中的MockLanguageModel
+            from src.mock.mock_language_model import MockLanguageModel
             model = MockLanguageModel()
         else:
             # 从配置获取通用模型参数
@@ -123,7 +111,8 @@ def test_agentic_rag_basic_functionality():
         print("开始运行agentic_rag.run...")
         result = agentic_rag.run(test_query)
         print(f"运行结果类型: {type(result)}")
-        print(f"运行结果内容: {result}")
+        import json
+        print(f"运行结果内容: {json.dumps(result, ensure_ascii=False, indent=2)}")
         
         # 验证记忆管理器是否记录了交互
         interactions = memory_manager.get_history()

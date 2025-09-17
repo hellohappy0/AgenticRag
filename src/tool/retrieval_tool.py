@@ -15,7 +15,7 @@ class RetrievalTool(BaseTool):
         """
         super().__init__(
             name="retrieve_documents",
-            description="从知识库中检索与查询相关的文档片段，用于回答问题或获取相关信息"
+            description="当需要从本地知识库中获取准确、可靠的已有信息时使用此工具。适用于事实性问题、已有文档中存在的知识查询、需要详细解释的专业概念等场景。如果问题涉及的信息可能存在于已有的知识库中，请优先使用此工具。"
         )
         self.vector_store = vector_store
     
@@ -66,7 +66,7 @@ class SearchTool(BaseTool):
         """
         super().__init__(
             name="web_search",
-            description="执行网络搜索以获取最新信息或外部知识"
+            description="当本地知识库无法提供所需信息，或需要获取最新事件、实时数据、外部资源或最新研究进展时使用此工具。适用于时效性问题、本地知识未覆盖的领域、需要最新发展动态的查询等场景。在确定本地知识库无法满足需求时使用此工具。"
         )
         self.search_engine = search_engine
     
@@ -90,6 +90,9 @@ class SearchTool(BaseTool):
             
             # 执行搜索
             results = self.search_engine.search(query, max_results=max_results)
+            
+            # 打印调试信息
+            print(f"\n调试信息 - web_search工具调用结果: {results}\n")
             
             # 格式化结果
             formatted_results = {

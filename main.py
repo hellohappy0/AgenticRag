@@ -1,5 +1,4 @@
-from typing import Dict, Any, List
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, List, Optional
 from src.agent import AgenticRAG
 from src.config import get_config, config_manager
 from src.agent.agent_builder import create_agentic_rag

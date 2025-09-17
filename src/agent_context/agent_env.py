@@ -89,15 +89,18 @@ class MemoryManager:
     记忆管理器，用于存储和管理代理的历史交互和重要信息
     """
     
-    def __init__(self, max_history_size: int = 10):
+    def __init__(self, max_history_size: int = 10, max_compressed_size: int = 500):
         """
         初始化记忆管理器
         
         @param max_history_size: 历史记录的最大条目数
+        @param max_compressed_size: 压缩后记忆的最大字符数
         """
         self.max_history_size = max_history_size
+        self.max_compressed_size = max_compressed_size
         self.history = []
         self.knowledge = {}
+        self.compressed_memory = ""
     
     def add_interaction(self, role: str, content: str, metadata: Optional[Dict[str, Any]] = None) -> None:
         """
@@ -161,3 +164,65 @@ class MemoryManager:
         """
         self.history = []
         self.knowledge = {}
+        self.compressed_memory = ""
+        
+    def compress_memory(self, model) -> None:
+        """
+        使用语言模型压缩历史记忆，保留关键信息
+        
+        @param model: 用于压缩的语言模型实例
+        """
+        if not self.history:
+            return
+        
+        # 准备压缩提示
+        history_text = "\n".join([f"{item['role']}: {item['content']}" for item in self.history])
+        prompt = f"请将以下对话历史压缩为简洁的摘要，保留最重要的信息和关键点，不要超过{self.max_compressed_size}字符：\n{history_text}"
+        
+        # 使用模型进行压缩
+        try:
+            self.compressed_memory = model.generate(prompt)
+            if len(self.compressed_memory) > self.max_compressed_size:
+                # 如果压缩结果仍过长，截断
+                self.compressed_memory = self.compressed_memory[:self.max_compressed_size] + "..."
+        except Exception as e:
+            # 如果压缩失败，使用默认压缩方式
+            self.compressed_memory = f"[{len(self.history)}条对话历史，包含用户查询和代理回答]"
+    
+    def get_context_with_memory(self, current_context: str) -> str:
+        """
+        获取包含压缩记忆的完整上下文
+        
+        @param current_context: 当前上下文
+        @return: 包含压缩记忆的完整上下文
+        """
+        if self.compressed_memory:
+            return f"[历史交互摘要]\n{self.compressed_memory}\n\n[当前信息]\n{current_context}"
+        return current_context
+    
+    def update_with_tool_results(self, tool_results: List[Dict[str, Any]]) -> None:
+        """
+        将工具结果更新到记忆中
+        
+        @param tool_results: 工具调用结果列表
+        """
+        if not tool_results:
+            return
+        
+        # 提取成功的工具结果
+        success_results = []
+        for result in tool_results:
+            if result.get("status") == "success":
+                success_results.append({
+                    "tool": result["tool"],
+                    "result": result["result"],
+                    "timestamp": result.get("metadata", {}).get("timestamp", "")
+                })
+        
+        if success_results:
+            # 将工具结果添加到知识库
+            self.add_knowledge(
+                "last_tool_results",
+                success_results,
+                {"type": "tool_results", "timestamp": "now"}
+            )

@@ -52,12 +52,18 @@ def create_agentic_rag(model_type: str = "mock", api_key: str = None, custom_mod
     # 创建搜索工具
     retrieval_tool = RetrievalTool(vector_store)
     
-    # 创建网络搜索工具
-    search_engine = DuckDuckGoSearchEngine()
-    search_tool = SearchTool(search_engine)
+    # 创建工具列表（默认只包含检索工具）
+    tools = [retrieval_tool]
     
-    # 添加所有工具
-    tools = [retrieval_tool, search_tool]
+    # 尝试创建网络搜索工具（如果ddgs库可用）
+    try:
+        search_engine = DuckDuckGoSearchEngine()
+        search_tool = SearchTool(search_engine)
+        tools.append(search_tool)
+        print("成功初始化网络搜索工具")
+    except ImportError as e:
+        print(f"警告: 无法初始化网络搜索工具: {str(e)}")
+        print("提示: 可以通过 'pip install duckduckgo-search' 安装必要的库来启用网络搜索功能")
     
     # 创建文档处理器
     document_processor = SimpleDocumentProcessor()
