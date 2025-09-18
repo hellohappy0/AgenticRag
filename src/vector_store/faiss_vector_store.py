@@ -16,7 +16,7 @@ class FAISSVectorStore:
     """
     
     def __init__(self, documents: Optional[List[Dict[str, Any]]] = None, embedding_source: str = "ollama", 
-                 embedding_model_name: str = "bge-m3", embedding_dim: int = 1024):
+                 embedding_model_name: str = "bge-m3:latest", embedding_dim: int = 1024):
         """
         初始化FAISS向量存储
         

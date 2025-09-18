@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional, Union
 import json
 import logging
-from src.tool import BaseTool
+from src.tools import BaseTool
 from src.doc_process import DocumentProcessor
 from src.agent_context import AgentEnvironment, MemoryManager
 from src.prompt import PromptManager

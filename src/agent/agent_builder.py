@@ -3,7 +3,7 @@ Agent Builder模块，负责创建和初始化Agentic RAG系统
 """
 from typing import Dict, List, Any, Optional
 from src.agent import AgenticRAG
-from src.tool import RetrievalTool, SearchTool, DuckDuckGoSearchEngine
+from src.tools import RetrievalTool, SearchTool, DuckDuckGoSearchEngine
 from src.doc_process import SimpleDocumentProcessor
 from src.agent_context import SimpleAgentEnvironment, MemoryManager
 from src.prompt import AgentPromptTemplates
