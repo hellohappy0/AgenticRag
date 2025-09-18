@@ -1,3 +1,4 @@
+import re
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional, Union
 from src.prompt.template_loader import template_loader
@@ -24,6 +25,10 @@ class SimplePromptTemplate(BasePromptTemplate):
     简单的提示模板实现
     """
     
+    # 预编译正则表达式，避免每次调用format方法时重新编译
+    # 使用\w+表示变量名，匹配字母、数字、下划线，避免贪婪匹配和ReDoS风险
+    VARIABLE_PATTERN = re.compile(r'\{(\w+)\}')
+    
     def __init__(self, template: str):
         """
         初始化提示模板
@@ -40,10 +45,22 @@ class SimplePromptTemplate(BasePromptTemplate):
         @return: 格式化后的提示字符串
         @raises KeyError: 当模板中需要的变量在kwargs中不存在时抛出异常
         """
+        # 预检查模板中需要的所有变量
+        # 使用预编译的正则表达式提取模板中所有的变量名
+        required_vars = set(match.group(1) for match in self.VARIABLE_PATTERN.finditer(self.template))
+        # 找出缺失的变量
+        missing_vars = required_vars - set(kwargs.keys())
+        
+        if missing_vars:
+            # 如果有缺失的变量，抛出包含所有缺失变量的异常
+            missing_vars_str = ', '.join(missing_vars)
+            raise KeyError(f"提示模板中缺少必需的参数: {missing_vars_str}")
+        
         try:
             return self.template.format(**kwargs)
-        except KeyError as e:
-            raise KeyError(f"提示模板中缺少必需的参数: {str(e)}")
+        except Exception as e:
+            # 捕获其他可能的格式化错误
+            raise ValueError(f"提示模板格式化失败: {str(e)}")
 
 
 class PromptManager:

@@ -570,13 +570,36 @@ class AgenticRAG(BaseAgent):
         print(f"【迭代优化】第{state['iterations'] + 1}轮迭代根据评估结果优化回答")
         print("="*60)
         
-        # 生成迭代优化提示
+        # 生成自我批评提示
+        self_critique_prompt = self.prompt_manager.generate_prompt(
+            "self_critique",
+            answer=state["answer"],
+            query=state["query"],
+            context=state["context"]
+        )
+        self_critique = self.model.generate(self_critique_prompt)
+        print(f"\n[自我批评结果]")
+        print(self_critique)
+        
+        # 生成反思提示
+        reflection_prompt = self.prompt_manager.generate_prompt(
+            "reflection",
+            query=state["query"],
+            thought_process=f"评估结果: {json.dumps(state['evaluation'], ensure_ascii=False)}\n自我批评: {self_critique}"
+        )
+        reflection = self.model.generate(reflection_prompt)
+        print(f"\n[反思结果]")
+        print(reflection)
+        
+        # 生成迭代优化提示，整合自我批评和反思结果
         optimization_prompt = self.prompt_manager.generate_prompt(
             "iteration_optimization",
             query=state["query"],
             answer=state["answer"],
             context=state["context"],
-            evaluation=json.dumps(state["evaluation"], ensure_ascii=False)
+            evaluation=json.dumps(state["evaluation"], ensure_ascii=False),
+            self_critique=self_critique,
+            reflection=reflection
         )
         
         # 获取模型的优化建议
