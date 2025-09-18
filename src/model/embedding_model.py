@@ -55,7 +55,7 @@ class OllamaEmbeddingModel(BaseEmbeddingModel):
     基于Ollama的嵌入模型实现
     """
     
-    def __init__(self, model_name: str = "bge-m3", base_url: Optional[str] = None):
+    def __init__(self, model_name: str = "bge-m3:latest", base_url: Optional[str] = None):
         """
         初始化Ollama嵌入模型
         
