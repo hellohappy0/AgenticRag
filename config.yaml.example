@@ -1,0 +1,47 @@
+# Agentic RAG 配置文件示例
+# 将此文件重命名为 config.yaml 并根据您的需求修改
+
+# 模型配置
+model:
+  # 模型类型: mock, ollama, tongyi等
+  type: "ollama"
+  # 通用模型参数
+  common:
+    max_tokens: 1024
+    temperature: 0.7
+  # 通义千问模型特定参数
+  tongyi:
+    model_name: "qwen-max"
+    api_key: "your_api_key_here"
+  # Ollama模型特定参数
+  ollama:
+    model_name: "llama3"
+    base_url: "http://localhost:11434"
+  # smolAgent模型特定参数
+  smolagent:
+    model_name: "gpt2"
+    api_key: "your_api_key_here"
+
+# 代理配置
+agent:
+  # 最大重试次数
+  max_retries: 3
+  # 最大工具调用次数
+  max_tool_calls: 5
+
+# 文档处理配置
+doc_process:
+  # 文档块大小
+  chunk_size: 1000
+  # 文档块重叠大小
+  chunk_overlap: 200
+
+# 搜索工具配置
+search:
+  # 最大搜索结果数量
+  max_results: 5
+
+# 向量存储配置
+vector_store:
+  # 检索的top-k结果数量
+  top_k: 3
