@@ -27,27 +27,68 @@ def create_agentic_rag(model_type: str = "mock", api_key: str = None, custom_mod
     if not model_type or model_type.lower() == "auto":
         model_type = get_config("model.type", "mock")
     
-    # 创建模拟文档数据
-    mock_documents = [
-        {
-            "id": "doc1",
-            "content": "人工智能（AI）是计算机科学的一个分支，旨在创建能够模拟人类智能的系统。人工智能的研究领域包括机器学习、自然语言处理、计算机视觉等。",
-            "metadata": {"source": "AI入门指南"}
-        },
-        {
-            "id": "doc2",
-            "content": "机器学习是人工智能的一个子集，专注于开发能够从数据中学习的算法。常见的机器学习方法包括监督学习、无监督学习和强化学习。",
-            "metadata": {"source": "机器学习基础"}
-        },
-        {
-            "id": "doc3",
-            "content": "大型语言模型（LLM）是一类基于深度学习的模型，能够理解和生成人类语言。著名的大型语言模型包括GPT-4、Claude和LLaMA等。",
-            "metadata": {"source": "自然语言处理进阶"}
-        }
-    ]
+    # 创建文档处理器
+    document_processor = SimpleDocumentProcessor()
+    
+    # 从docs目录加载实际文档
+    from pathlib import Path
+    
+    # 获取docs目录路径
+    current_dir = Path(__file__).resolve().parent.parent.parent
+    docs_dir = current_dir / 'docs'
+    
+    # 加载并处理文档
+    documents = []
+    try:
+        # 加载docs目录下的所有md文件
+        doc_files = list(docs_dir.glob('*.md'))
+        if doc_files:
+            print(f"正在从docs目录加载{len(doc_files)}个文档...")
+            
+            # 处理每个文档
+            for doc_file in doc_files:
+                try:
+                    # 使用文档处理器处理文件
+                    processed_docs = document_processor.process(str(doc_file), chunk_size=500, chunk_overlap=50)
+                    
+                    # 将处理后的文档转换为向量存储所需的格式
+                    for i, chunk in enumerate(processed_docs):
+                        doc = {
+                            'id': f"{doc_file.stem}_chunk_{i}",
+                            'content': chunk,
+                            'metadata': {'source': str(doc_file.name)}
+                        }
+                        documents.append(doc)
+                except Exception as e:
+                    print(f"处理文件 {doc_file.name} 时出错: {str(e)}")
+            
+            print(f"成功加载并处理了{len(documents)}个文档块")
+    except Exception as e:
+        print(f"从docs目录加载文档时出错: {str(e)}")
+    
+    # 如果没有加载到文档，使用模拟文档作为后备
+    if not documents:
+        print("未加载到有效文档，使用模拟文档...")
+        documents = [
+            {
+                "id": "doc1",
+                "content": "人工智能（AI）是计算机科学的一个分支，旨在创建能够模拟人类智能的系统。人工智能的研究领域包括机器学习、自然语言处理、计算机视觉等。",
+                "metadata": {"source": "AI入门指南"}
+            },
+            {
+                "id": "doc2",
+                "content": "机器学习是人工智能的一个子集，专注于开发能够从数据中学习的算法。常见的机器学习方法包括监督学习、无监督学习和强化学习。",
+                "metadata": {"source": "机器学习基础"}
+            },
+            {
+                "id": "doc3",
+                "content": "大型语言模型（LLM）是一类基于深度学习的模型，能够理解和生成人类语言。著名的大型语言模型包括GPT-4、Claude和LLaMA等。",
+                "metadata": {"source": "自然语言处理进阶"}
+            }
+        ]
     
     # 创建向量存储 - 使用实际的FAISS向量数据库
-    vector_store = FAISSVectorStore(mock_documents)
+    vector_store = FAISSVectorStore(documents)
     
     # 创建搜索工具
     retrieval_tool = RetrievalTool(vector_store)
@@ -64,9 +105,6 @@ def create_agentic_rag(model_type: str = "mock", api_key: str = None, custom_mod
     except ImportError as e:
         print(f"警告: 无法初始化网络搜索工具: {str(e)}")
         print("提示: 可以通过 'pip install duckduckgo-search' 安装必要的库来启用网络搜索功能")
-    
-    # 创建文档处理器
-    document_processor = SimpleDocumentProcessor()
     
     # 创建代理环境
     environment = SimpleAgentEnvironment()
