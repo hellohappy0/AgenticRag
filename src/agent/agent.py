@@ -361,17 +361,23 @@ class AgenticRAG(BaseAgent):
                     
                     # 记录工具使用历史
                     for i, result in enumerate(tool_results):
-                        if result["status"] == "success" and result["tool"] == "retrieve_documents":
+                        if result["status"] == "success":
                             try:
                                 tool_call = tool_calls[i] if i < len(tool_calls) else {}
-                                # 评估检索结果质量（简单判断：相似度分数大于0.5视为相关）
-                                results = result.get("result", {}).get("results", [])
-                                avg_score = sum(item.get("score", 0) for item in results) / len(results) if results else 0
+                                tool_name = result["tool"]
+                                query = tool_call.get("parameters", {}).get("query", "")
+                                
+                                # 评估结果质量
+                                if tool_name == "retrieve_documents" and "result" in result:
+                                    results = result["result"].get("results", [])
+                                    avg_score = sum(item.get("score", 0) for item in results) / len(results) if results else 0
+                                else:
+                                    avg_score = 1.0  # 非检索工具默认设为最高质量
                                 
                                 # 记录工具使用历史
                                 state["tool_usage_history"].append({
-                                    "tool": "retrieve_documents",
-                                    "query": tool_call.get("parameters", {}).get("query", ""),
+                                    "tool": tool_name,
+                                    "query": query,
                                     "result_quality": avg_score  # 0-1之间的分数，表示结果质量
                                 })
                                 
