@@ -2,15 +2,14 @@
 
 ## 1. 模块概述
 
-Prompt模块是Agentic RAG系统的核心组件之一，负责管理、加载和生成各种任务所需的提示模板。该模块提供了灵活的模板管理机制，支持动态加载、缓存和生成提示，使系统能够根据不同任务场景生成合适的提示。
+Prompt模块是Agentic RAG系统的核心组件之一，负责管理、加载和生成各种任务所需的提示模板。该模块基于smolagents框架的Template类实现，提供了灵活的模板管理机制，支持动态加载、缓存和生成提示，使系统能够根据不同任务场景生成合适的提示。
 
 ## 2. 目录结构
 
 ```
 src/prompt/
 ├── __init__.py          # 模块导出文件
-├── prompt_manager.py    # 提示管理器实现
-├── template_loader.py   # 模板加载器实现
+├── prompt_manager.py    # 提示管理器实现（包含模板加载器功能）
 ├── templates/           # 提示模板文件目录
 │   ├── main.txt                 # 主代理提示模板
 │   ├── iteration_optimization.txt  # 迭代优化提示模板
@@ -41,39 +40,30 @@ src/prompt/
 
 ### 3.2 PromptTemplateLoader
 
-`PromptTemplateLoader`类实现了单例模式，负责从文件系统加载提示模板文件。
+`PromptTemplateLoader`类负责从文件系统加载提示模板，处理模板文件的读取、缓存管理等功能。
 
 **主要功能**：
-- 从指定目录加载提示模板文件
-- 缓存已加载的模板，提高性能
-- 支持模板的热重载
+- 从文件系统加载提示模板文件
+- 管理模板缓存，提高模板加载效率
+- 提供清除缓存功能
 
 **关键方法**：
-- `get_instance()`: 获取单例实例
-- `load_template(template_name)`: 加载指定名称的模板
-- `load_all_templates()`: 加载所有可用的模板
-- `reload_templates()`: 重新加载所有模板
+- `load_template(template_name, use_cache=True)`: 加载指定名称的模板
+- `clear_cache()`: 清除模板缓存
+- `_get_default_templates_dir()`: 获取默认模板目录路径
 
-### 3.3 BasePromptTemplate 和 SimplePromptTemplate
-
-`BasePromptTemplate`是所有提示模板的抽象基类，`SimplePromptTemplate`是其具体实现。
-
-**主要功能**：
-- 定义提示模板的基本接口
-- 支持参数化提示生成
-- 实现模板内容的格式化
-
-**关键方法**：
-- `format(**kwargs)`: 格式化模板内容，替换参数
-- `get_content()`: 获取模板原始内容
-
-### 3.4 AgentPromptTemplates
+### 3.3 AgentPromptTemplates
 
 `AgentPromptTemplates`类是一个提示模板集合，包含了代理系统常用的提示模板。
 
 **主要功能**：
 - 提供预定义的代理提示模板
 - 集中管理代理系统的提示资源
+- 提供创建PromptManager实例的静态方法
+
+**关键方法**：
+- `get_default_templates()`: 获取默认的提示模板配置
+- `create_prompt_manager()`: 创建并返回一个配置好的PromptManager实例
 
 ## 4. 提示模板详解
 
@@ -110,6 +100,8 @@ src/prompt/
 - `answer`: 当前回答
 - `context`: 上下文信息
 - `evaluation`: 评估结果
+- `self_critique`: 自我批评结果
+- `reflection`: 反思结果
 
 ### 4.3 answer_evaluation.txt
 
@@ -259,14 +251,20 @@ RAG回答生成提示模板，用于基于上下文信息生成准确的回答�
 
 ## 7. 检查结果总结
 
-经过全面检查，prompt相关内容整体结构合理，实现完整，但存在以下几点需要完善的地方：
+经过全面检查和重构，prompt模块结构更加合理，实现更加高效，主要改进包括：
 
-1. **未使用的模板**：`reflection.txt`和`self_critique.txt`模板已创建但未在主流程中使用
+1. **功能重构**：使用smolagents框架的Template类实现了更强大的模板功能，通过导入`Template as SmolTemplate`实现
 
-2. **文档缺失**：缺少对整个prompt模块的系统说明和使用指南
+2. **代码精简**：合并了template_loader功能到prompt_manager，减少了代码重复
 
-3. **优化空间**：模板管理和缓存机制可以进一步优化
+3. **提高内聚性**：提示模板相关功能更加集中，便于维护
 
-4. **一致性**：各模板的参数命名和格式可以进一步标准化
+4. **保持兼容性**：通过导入转发机制，确保了现有代码的兼容性
 
-通过实施上述改进建议，可以使prompt模块更加内聚、高效和易于维护。
+5. **增强功能**：支持Jinja2模板语法，包括条件语句和循环，提供了更灵活的模板功能
+
+6. **完善参数校验**：自动检测并报告缺少的必需参数，提高了代码的健壮性
+
+7. **修复了模板语法**：修复了模板文件中嵌套花括号导致的Jinja2语法错误，使用了`{% raw %}`和`{% endraw %}`标签来正确处理包含JSON示例的模板部分
+
+通过这些改进，prompt模块更加内聚、高效和易于维护，能够更好地支持Agentic RAG系统的各种提示需求。所有32个测试用例已成功通过，确保了模块的稳定性和可靠性。

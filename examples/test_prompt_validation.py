@@ -3,7 +3,7 @@
 
 """
 测试提示模板的参数校验功能
-验证SimplePromptTemplate能够正确检测并报告所有缺失的变量
+验证基于smolagents的提示模板能够正确检测并报告所有缺失的变量
 """
 
 from src.prompt import PromptManager

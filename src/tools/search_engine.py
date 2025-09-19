@@ -2,12 +2,17 @@
 搜索引擎模块，提供各种搜索引擎的实现
 """
 from typing import Dict, List, Any
+import logging
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # 尝试导入ddgs库
 try:
     from ddgs import DDGS
 except ImportError:
-    print("警告: ddgs模块未安装，网络搜索功能将不可用")
+    logger.warning("ddgs模块未安装，网络搜索功能将不可用")
     DDGS = None
 
 
@@ -33,6 +38,13 @@ class DuckDuckGoSearchEngine:
         @return: 搜索结果列表
         """
         try:
+            # 参数验证
+            if not query or not isinstance(query, str):
+                raise ValueError("搜索查询必须是非空字符串")
+            
+            if not isinstance(max_results, int) or max_results <= 0:
+                raise ValueError("max_results必须是正整数")
+                
             # 使用ddgs执行搜索
             results = list(self.ddgs.text(query, max_results=max_results))
             
@@ -46,9 +58,11 @@ class DuckDuckGoSearchEngine:
                 })
             
             return formatted_results
+        except ValueError as ve:
+            logger.error(f"参数错误: {str(ve)}")
+            return []
         except Exception as e:
-            print(f"搜索过程中出错: {str(e)}")
-            # 出错时返回空结果
+            logger.error(f"搜索过程中出错: {str(e)}")
             return []
 
 

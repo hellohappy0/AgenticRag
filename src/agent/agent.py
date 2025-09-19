@@ -5,7 +5,7 @@ import logging
 from src.tools import BaseTool
 from src.doc_process import DocumentProcessor
 from src.agent_context import AgentEnvironment
-from src.agent_context.smolagent_memory_manager import SmolAgentMemoryManager
+from src.memory.smol_memory_manager import SmolAgentMemoryManager
 from src.prompt import PromptManager
 from src.model import BaseLanguageModel, ModelResponseParser
 

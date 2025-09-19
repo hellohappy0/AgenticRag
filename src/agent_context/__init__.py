@@ -3,6 +3,6 @@
 """
 
 from .agent_env import AgentEnvironment, SimpleAgentEnvironment
-from .smolagent_memory_manager import SmolAgentMemoryManager
+from src.memory.smol_memory_manager import SmolAgentMemoryManager
 
 __all__ = ["AgentEnvironment", "SimpleAgentEnvironment", "SmolAgentMemoryManager"]

@@ -17,7 +17,7 @@
 
 === 工具调用格式 ===
 如果需要使用工具，请严格按照以下格式输出（不要包含其他任何文字）：
-<|FunctionCallBegin|>[{{"name": "工具名称", "parameters": {{"参数名": "参数值"}}}}]<|FunctionCallEnd|>
+{% raw %}<|FunctionCallBegin|>[{"name": "工具名称", "parameters": {"参数名": "参数值"}}]<|FunctionCallEnd|>{% endraw %}
 
 === 输入信息 ===
 用户问题：{query}

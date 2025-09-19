@@ -1,7 +1,6 @@
 import numpy as np
 import requests
 import json
-import numpy as np
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from src.config import get_config
@@ -87,23 +86,14 @@ class OllamaEmbeddingModel(BaseEmbeddingModel):
                 models = response.json()
                 model_names = [model['name'] for model in models.get('models', [])]
                 # 检查模型是否已安装
-                if self.model_name in model_names:
-                    print(f"Ollama服务健康，已安装模型: {', '.join(model_names)}")
-                    self._available = True
-                    return True
-                else:
-                    print(f"Warning: Ollama服务中未找到{self.model_name}模型")
-                    print(f"已安装模型列表: {', '.join(model_names)}")
+                self._available = self.model_name in model_names
+                return self._available
             else:
-                print(f"Ollama服务返回非200状态码: {response.status_code}")
-        except requests.exceptions.ConnectionError:
-            print(f"无法连接到Ollama服务: {self.base_url}")
-            print("请确保Ollama服务正在运行")
+                self._available = False
+                return False
         except Exception as e:
-            print(f"检查Ollama服务状态时发生错误: {str(e)}")
-        
-        self._available = False
-        return False
+            self._available = False
+            return False
     
     def get_embedding(self, text: str) -> np.ndarray:
         """
@@ -141,16 +131,8 @@ class OllamaEmbeddingModel(BaseEmbeddingModel):
         @param texts: 输入文本列表
         @return: 嵌入向量数组
         """
-        num_texts = len(texts)
-        embeddings = []
-        
-        print(f"正在从Ollama获取{num_texts}个文本的嵌入...")
-        for i, text in enumerate(texts):
-            if (i + 1) % 10 == 0 or i == num_texts - 1:
-                print(f"已处理 {i + 1}/{num_texts} 个文本")
-            embedding = self.get_embedding(text)
-            embeddings.append(embedding)
-        
+        # 批量获取嵌入向量
+        embeddings = [self.get_embedding(text) for text in texts]
         return np.array(embeddings, dtype=np.float32)
     
     def get_embedding_dimension(self) -> int:

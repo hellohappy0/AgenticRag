@@ -13,7 +13,7 @@
 上下文信息：{context}
 
 评估结果（请使用JSON格式输出）：
-{{
+{% raw %}{
   "accuracy": "[准确/不准确/部分准确]",
   "accuracy_reason": "[解释准确性评估的理由]",
   "completeness": "[完整/不完整/部分完整]",
@@ -28,4 +28,4 @@
   "suggestions": "[改进建议]",
   "need_iteration": "[是否需要迭代优化：是/否]",
   "iteration_focus": "[如果需要迭代，应该重点改进的方面]"
-}}
+}{% endraw %}

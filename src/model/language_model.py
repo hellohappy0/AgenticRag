@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional, Union
 import json
 import requests
-from smolagents import ToolCallingAgent, TransformersModel, Model  # 使用正确的导入
+from smolagents import ToolCallingAgent, TransformersModel
 
-# 尝试导入dashscope库
+# 尝试导入dashscope库（用于通义千问模型）
 try:
     import dashscope
 except ImportError:
@@ -56,12 +56,8 @@ class SmolAgentModel(BaseLanguageModel):
         self.model_name = model_name
         self.api_key = api_key
         self.model_params = kwargs
-        self._initialize_agent()
-    
-    def _initialize_agent(self) -> None:
-        """
-        初始化ToolCallingAgent
-        """
+        
+        # 初始化模型和代理
         try:
             # 创建模型实例
             if self.api_key:
@@ -69,8 +65,8 @@ class SmolAgentModel(BaseLanguageModel):
             else:
                 self.model = TransformersModel(model_id=self.model_name)
             
-            # 初始时不设置工具
-            self.agent = None
+            # 初始时创建无工具的代理
+            self.agent = ToolCallingAgent(model=self.model, tools=[])
         except Exception as e:
             raise RuntimeError(f"初始化smolAgent失败: {str(e)}")
     
@@ -83,13 +79,8 @@ class SmolAgentModel(BaseLanguageModel):
         @return: 模型生成的响应
         """
         try:
-            # 如果没有agent，创建一个没有工具的agent
-            if self.agent is None:
-                self.agent = ToolCallingAgent(model=self.model, tools=[])
-            
-            # 生成响应
+            # 直接使用已初始化的代理生成响应
             response = self.agent.run(prompt, **kwargs)
-            
             return str(response)
         except Exception as e:
             raise RuntimeError(f"模型生成失败: {str(e)}")
@@ -138,11 +129,6 @@ class OllamaModel(BaseLanguageModel):
         self.model_name = model_name
         self.base_url = base_url
         self.model_params = kwargs
-        # 确保安装了requests库
-        try:
-            import requests
-        except ImportError:
-            raise ImportError("请安装requests库: pip install requests")
     
     def generate(self, prompt: str, **kwargs) -> str:
         """
@@ -246,18 +232,16 @@ class TongyiQianwenModel(BaseLanguageModel):
         self.api_key = api_key
         self.model_name = model_name
         self.model_params = kwargs
-        # 检查dashscope库是否安装
-        try:
-            import dashscope
-        except ImportError:
-            raise ImportError("请安装dashscope库: pip install dashscope")
     
     def generate(self, prompt: str, **kwargs) -> str:
         """
         生成模型响应
+        
+        @param prompt: 输入提示
+        @param kwargs: 模型参数
+        @return: 模型生成的响应
         """
         import dashscope
-        
         dashscope.api_key = self.api_key
         
         try:
@@ -364,24 +348,22 @@ class ModelResponseParser:
         """
         tool_calls = []
         
-        # 简化的解析逻辑，实际应根据模型输出格式调整
-        # 查找工具调用标记
+        # 检查并解析工具调用标记
         try:
-            # 这里只是一个示例实现，实际需要根据smolAgent的输出格式进行调整
             start_marker = "<|FunctionCallBegin|>"
             end_marker = "<|FunctionCallEnd|>"
             
             if start_marker in response and end_marker in response:
+                # 提取工具调用内容
                 start_idx = response.find(start_marker) + len(start_marker)
                 end_idx = response.find(end_marker)
                 tool_call_str = response[start_idx:end_idx].strip()
                 
-                # 解析JSON格式的工具调用
-                tool_calls = json.loads(tool_call_str)
-                
-                # 确保返回的是列表格式
-                if not isinstance(tool_calls, list):
-                    tool_calls = [tool_calls]
+                # 解析JSON并确保返回列表格式
+                if tool_call_str:
+                    tool_calls = json.loads(tool_call_str)
+                    if not isinstance(tool_calls, list):
+                        tool_calls = [tool_calls]
         except Exception as e:
             print(f"解析工具调用失败: {str(e)}")
         

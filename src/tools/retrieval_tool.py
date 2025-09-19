@@ -30,12 +30,11 @@ class RetrievalTool(BaseTool):
         @raises ToolError: 当检索失败时抛出异常
         """
         try:
-            # 参数验证
-            if not query or not isinstance(query, str):
-                raise ValueError("查询文本必须是非空字符串")
-            
-            if not isinstance(top_k, int) or top_k <= 0:
-                raise ValueError("top_k必须是正整数")
+            # 使用基类的参数验证辅助函数
+            query = self.validate_param(query, "query", str, required=True, 
+                                       validator=lambda x: len(x.strip()) > 0)
+            top_k = self.validate_param(top_k, "top_k", int, required=True, 
+                                       validator=lambda x: x > 0)
             
             # 执行检索
             results = self.vector_store.search(query, top_k=top_k)
@@ -81,18 +80,14 @@ class SearchTool(BaseTool):
         @raises ToolError: 当搜索失败时抛出异常
         """
         try:
-            # 参数验证
-            if not query or not isinstance(query, str):
-                raise ValueError("搜索查询必须是非空字符串")
-            
-            if not isinstance(max_results, int) or max_results <= 0:
-                raise ValueError("max_results必须是正整数")
+            # 使用基类的参数验证辅助函数
+            query = self.validate_param(query, "query", str, required=True, 
+                                       validator=lambda x: len(x.strip()) > 0)
+            max_results = self.validate_param(max_results, "max_results", int, required=True, 
+                                           validator=lambda x: x > 0)
             
             # 执行搜索
             results = self.search_engine.search(query, max_results=max_results)
-            
-            # 打印调试信息
-            print(f"\n调试信息 - web_search工具调用结果: {results}\n")
             
             # 格式化结果
             formatted_results = {

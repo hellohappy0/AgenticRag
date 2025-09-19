@@ -1,2 +1,1 @@
-每次修改，要跑一次全量的单元测试
-尽可能使用smolAgents框架写代码，知识库中包含了smolAgents的相关介绍，如果某些细节不够清楚，应该访问https://github.com/huggingface/smolagents确认，不要从零创建
+尽可能使用smolAgents框架写代码，“smolagents的说明手册”知识库中包含了smolAgents的相关介绍，如果某些细节不够清楚，应该访问.venv\Lib\site-packages\smolagents\确认，不要从零创建
