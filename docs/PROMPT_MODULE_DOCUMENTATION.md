@@ -86,6 +86,7 @@ src/prompt/
 - 提供工具使用的指导原则
 - 指导代理的决策流程
 - 包含迭代优化的相关指示
+- 考虑工具使用历史记录
 
 **主要参数**：
 - `query`: 用户查询
@@ -93,6 +94,7 @@ src/prompt/
 - `tools`: 可用工具列表
 - `last_evaluation`: 上一次评估结果
 - `optimization_plan`: 优化计划
+- `tool_usage_history`: 历史工具使用记录（包含工具名称、查询和结果质量）
 
 ### 4.2 iteration_optimization.txt
 
@@ -200,7 +202,8 @@ RAG回答生成提示模板，用于基于上下文信息生成准确的回答�
        context=context_to_use,
        tools=tools_str,
        last_evaluation=json.dumps(last_evaluation, ensure_ascii=False) if last_evaluation else "无",
-       optimization_plan=json.dumps(optimization_plan, ensure_ascii=False) if optimization_plan else "无"
+       optimization_plan=json.dumps(optimization_plan, ensure_ascii=False) if optimization_plan else "无",
+       tool_usage_history=json.dumps(state["tool_usage_history"], ensure_ascii=False) if state.get("tool_usage_history") else "无"
    )
    ```
 
