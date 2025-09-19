@@ -55,72 +55,65 @@
 
 ## 三、集成大模型API到Agentic RAG系统
 
-### 1. 创建新的模型实现类
-在`src/model/language_model.py`文件中添加新的模型实现类。以下是Ollama模型和通义千问模型的实现示例：
+### 1. 模型实现类结构
+项目在`src/model/language_model.py`文件中实现了几种语言模型，包括基于smolAgent的模型、Ollama模型和通义千问模型。以下是主要模型实现的概述：
 
-#### Ollama模型实现
+#### SmolAgent模型实现
 
 ```python
-class OllamaModel(BaseLanguageModel):
+class SmolAgentModel(BaseLanguageModel):
     """
-    基于本地Ollama部署的语言模型实现
+    基于smolAgent的语言模型实现
     """
     
-    def __init__(self, model_name: str = "llama3", base_url: str = "http://localhost:11434", **kwargs):
+    def __init__(self, model_name: str = "gpt2", api_key: Optional[str] = None, **kwargs):
         """
-        初始化Ollama模型
+        初始化smolAgent模型
         
-        @param model_name: 模型名称，如llama3、mistral等
-        @param base_url: Ollama API的基础URL，默认是本地部署的地址
+        @param model_name: 模型名称
+        @param api_key: API密钥
         @param kwargs: 其他参数
         """
         self.model_name = model_name
-        self.base_url = base_url
+        self.api_key = api_key
         self.model_params = kwargs
-        # 确保安装了requests库
+        self._initialize_agent()
+    
+    def _initialize_agent(self) -> None:
+        """
+        初始化ToolCallingAgent
+        """
         try:
-            import requests
-        except ImportError:
-            raise ImportError("请安装requests库: pip install requests")
+            # 创建模型实例
+            if self.api_key:
+                self.model = TransformersModel(model_id=self.model_name, token=self.api_key)
+            else:
+                self.model = TransformersModel(model_id=self.model_name)
+            
+            # 初始时不设置工具
+            self.agent = None
+        except Exception as e:
+            raise RuntimeError(f"初始化smolAgent失败: {str(e)}")
     
     def generate(self, prompt: str, **kwargs) -> str:
         """
         生成模型响应
         
         @param prompt: 输入提示
-        @param kwargs: 其他参数
-        @return: 生成的文本
+        @param kwargs: 模型参数
+        @return: 模型生成的响应
         """
-        # 合并默认参数和传入参数
-        params = {**self.model_params, **kwargs}
-        
-        # 构建API请求
-        url = f"{self.base_url}/api/generate"
-        headers = {"Content-Type": "application/json"}
-        data = {
-            "model": self.model_name,
-            "prompt": prompt,
-            **params
-        }
-        
-        # 发送请求到Ollama API
         try:
-            response = requests.post(url, json=data, headers=headers)
-            response.raise_for_status()
+            # 如果没有agent，创建一个没有工具的agent
+            if self.agent is None:
+                self.agent = ToolCallingAgent(model=self.model, tools=[])
             
-            # 处理流式响应
-            full_response = ""
-            for line in response.iter_lines():
-                if line:
-                    line_data = json.loads(line)
-                    if "response" in line_data:
-                        full_response += line_data["response"]
-                    if line_data.get("done", False):
-                        break
+            # 生成响应
+            response = self.agent.run(prompt, **kwargs)
             
-            return full_response
+            return str(response)
         except Exception as e:
-            raise RuntimeError(f"Ollama模型调用失败: {str(e)}")
+            raise RuntimeError(f"模型生成失败: {str(e)}")
     
     def generate_with_tools(self, prompt: str, tools: List[Dict[str, Any]], **kwargs) -> Dict[str, Any]:
         """
@@ -128,109 +121,46 @@ class OllamaModel(BaseLanguageModel):
         
         @param prompt: 输入提示
         @param tools: 可用工具列表
-        @param kwargs: 其他参数
-        @return: 包含响应和工具调用信息的字典
+        @param kwargs: 模型参数
+        @return: 包含模型响应和可能的工具调用的字典
         """
-        # 构建包含工具信息的提示
-        tools_json = json.dumps(tools, ensure_ascii=False, indent=2)
-        tool_prompt = f"""你可以使用以下工具来回答问题：
-{tools_json}
-
-如果需要使用工具，请按照以下格式输出：
-<|FunctionCallBegin|>[{{"name": "工具名称", "parameters": {{"参数名": "参数值"}}}}]<|FunctionCallEnd|>
-
-问题：{prompt}"""
-        
-        # 获取模型响应
-        response = self.generate(tool_prompt, **kwargs)
-        
-        # 解析工具调用
-        tool_calls = []
-        try:
-            # 查找工具调用标记
-            if "<|FunctionCallBegin|>" in response and "<|FunctionCallEnd|>" in response:
-                begin_idx = response.index("<|FunctionCallBegin|>") + len("<|FunctionCallBegin|>")
-                end_idx = response.index("<|FunctionCallEnd|>")
-                tool_call_str = response[begin_idx:end_idx]
-                
-                # 解析工具调用JSON
-                if tool_call_str.strip():  # 确保不为空
-                    tool_calls = json.loads(tool_call_str)
-                    if not isinstance(tool_calls, list):
-                        tool_calls = [tool_calls]
-        except json.JSONDecodeError:
-            # 如果解析失败，返回空的工具调用列表
-            pass
-        
-        return {
-            "response": response,
-            "tool_calls": tool_calls,
-            "raw_output": response
-        }
+        # 实现工具调用逻辑
+        # ...
 ```
 
-#### 通义千问模型实现
+#### 其他模型实现
+
+项目还包括Ollama模型和通义千问模型的实现，它们都继承自BaseLanguageModel抽象基类，并实现了generate和generate_with_tools方法。在使用这些模型时，需要确保安装了相应的依赖库（如dashscope库用于通义千问模型）。
+
+### 2. ModelFactory类使用
+
+项目使用`create_agentic_rag`函数来创建Agentic RAG实例，该函数会根据配置选择合适的模型类型：
 
 ```python
-class TongyiQianwenModel(BaseLanguageModel):
-    """
-    基于阿里云通义千问API的语言模型实现
-    """
-    
-    def __init__(self, api_key: str, model_name: str = "qwen-max", **kwargs):
-        """
-        初始化通义千问模型
-        
-        @param api_key: DashScope API密钥
-        @param model_name: 模型名称
-        @param kwargs: 其他参数
-        """
-        self.api_key = api_key
-        self.model_name = model_name
-        self.model_params = kwargs
-        # 尝试安装dashscope库
-        try:
-            import dashscope
-        except ImportError:
-            raise ImportError("请安装dashscope库: pip install dashscope")
-    
-    def generate(self, prompt: str, **kwargs) -> str:
-        """
-        生成模型响应
-        """
-        import dashscope
-        
-        dashscope.api_key = self.api_key
-        
-        try:
-            response = dashscope.Generation.call(
-                self.model_name,
-                prompt=prompt,
-                **self.model_params,
-                **kwargs
-            )
-            
-            if response.status_code == 200:
-                return response.output.text
-            else:
-                raise RuntimeError(f"通义千问模型调用失败: {response.message}")
-        except Exception as e:
-            raise RuntimeError(f"通义千问模型调用失败: {str(e)}")
-    
-    def generate_with_tools(self, prompt: str, tools: List[Dict[str, Any]], **kwargs) -> Dict[str, Any]:
-        """
-        生成模型响应，支持工具调用
-        """
-        # 简化实现，实际应根据通义千问的工具调用格式调整
-        # 通义千问的工具调用功能可能需要参考最新API文档
-        response = self.generate(prompt, **kwargs)
-        
-        # 这里仅作为示例，实际需要根据模型的输出格式解析工具调用
-        return {
-            "response": response,
-            "tool_calls": [],
-            "raw_output": response
-        }
+# 创建Agentic RAG实例
+agentic_rag = create_agentic_rag(model_type=model_type, api_key=api_key, custom_model=custom_model)
+```
+
+其中，model_type可以是：
+- `mock`: 模拟模型（用于测试）
+- `ollama`: Ollama本地模型
+- `tongyi`: 通义千问模型
+- 其他支持的模型类型
+
+### 3. 配置模型参数
+
+在使用真实模型时，需要在配置文件或环境变量中设置相应的参数：
+
+```yaml
+# 配置文件示例
+model:
+  type: "ollama"  # 或 "tongyi"
+  ollama:
+    model_name: "llama3"
+    base_url: "http://localhost:11434"
+  tongyi:
+    model_name: "qwen-max"
+    api_key: "your_api_key_here"
 ```
 
 ### 2. 更新ModelFactory类
