@@ -4,7 +4,8 @@ import json
 import logging
 from src.tools import BaseTool
 from src.doc_process import DocumentProcessor
-from src.agent_context import AgentEnvironment, MemoryManager
+from src.agent_context import AgentEnvironment
+from src.agent_context.smolagent_memory_manager import SmolAgentMemoryManager
 from src.prompt import PromptManager
 from src.model import BaseLanguageModel, ModelResponseParser
 
@@ -53,7 +54,7 @@ class AgenticRAG(BaseAgent):
         document_processor: DocumentProcessor,
         environment: AgentEnvironment,
         prompt_manager: PromptManager,
-        memory_manager: Optional[MemoryManager] = None,
+        memory_manager: Optional[SmolAgentMemoryManager] = None,
         max_retries: int = 3,
         max_tool_calls: int = 5
     ):
@@ -75,7 +76,7 @@ class AgenticRAG(BaseAgent):
             self.document_processor = document_processor
             self.environment = environment
             self.prompt_manager = prompt_manager
-            self.memory_manager = memory_manager or MemoryManager()
+            self.memory_manager = memory_manager or SmolAgentMemoryManager()
             self.max_retries = max_retries
             self.max_tool_calls = max_tool_calls
             logger.info("AgenticRAG initialized successfully")

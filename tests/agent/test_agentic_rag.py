@@ -3,7 +3,8 @@ from unittest.mock import Mock, patch, MagicMock
 from src.agent import AgenticRAG
 from src.tools.retrieval_tool import RetrievalTool, SearchTool
 from src.doc_process.simple_processor import SimpleDocumentProcessor
-from src.agent_context.agent_env import SimpleAgentEnvironment, MemoryManager
+from src.agent_context.agent_env import SimpleAgentEnvironment
+from src.agent_context.smolagent_memory_manager import SmolAgentMemoryManager
 from src.prompt.prompt_manager import AgentPromptTemplates
 from src.model.language_model import BaseLanguageModel
 
@@ -41,7 +42,7 @@ class TestAgenticRAG(unittest.TestCase):
         # 创建其他组件
         self.document_processor = SimpleDocumentProcessor()
         self.environment = SimpleAgentEnvironment()
-        self.memory_manager = MemoryManager()
+        self.memory_manager = SmolAgentMemoryManager()
         self.prompt_manager = AgentPromptTemplates.create_prompt_manager()
         
         # 创建模拟语言模型

@@ -5,7 +5,7 @@ from typing import Dict, List, Any, Optional
 from src.agent import AgenticRAG
 from src.tools import RetrievalTool, SearchTool, DuckDuckGoSearchEngine
 from src.doc_process import SimpleDocumentProcessor
-from src.agent_context import SimpleAgentEnvironment, MemoryManager
+from src.agent_context import SimpleAgentEnvironment, SmolAgentMemoryManager
 from src.prompt import AgentPromptTemplates
 from src.model import ModelFactory
 from src.config import get_config
@@ -110,7 +110,7 @@ def create_agentic_rag(model_type: str = "mock", api_key: str = None, custom_mod
     environment = SimpleAgentEnvironment()
     
     # 创建记忆管理器
-    memory_manager = MemoryManager()
+    memory_manager = SmolAgentMemoryManager()
     
     # 创建提示管理器
     prompt_manager = AgentPromptTemplates.create_prompt_manager()
