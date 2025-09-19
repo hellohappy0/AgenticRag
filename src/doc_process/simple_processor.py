@@ -1,153 +1,122 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 from pathlib import Path
-import PyPDF2
-import docx
-import os
 from .base_processor import DocumentProcessor, DocumentSplitter
+from unstructured.partition.md import partition_md
+from unstructured.partition.text import partition_text
+from unstructured.chunking.title import chunk_by_title
+from unstructured.documents.elements import Text
 
 
 class SimpleTextSplitter(DocumentSplitter):
     """
-    简单的文本分割器，基于固定的字符数分割文本
+    简单的文本分割器，使用unstructured包进行文本分割
     """
     
-    def split(self, text: str, chunk_size: int = 1000, chunk_overlap: int = 100, **kwargs) -> List[str]:
-        """
-        按固定字符数分割文本
+    def split(self, text: str, chunk_size: int = 500, chunk_overlap: int = 50) -> List[str]:
+        """将文本分割成指定大小的块"""
+        # 参数验证
+        if chunk_size <= 0:
+            raise ValueError("chunk_size必须大于0")
+        if chunk_overlap < 0:
+            raise ValueError("chunk_overlap不能为负数")
+        if chunk_overlap >= chunk_size:
+            raise ValueError("chunk_overlap必须小于chunk_size")
         
-        @param text: 要分割的文本
-        @param chunk_size: 每个片段的最大字符数
-        @param chunk_overlap: 相邻片段之间的重叠字符数
-        @param kwargs: 其他参数
-        @return: 分割后的文本片段列表
-        """
-        if not text:
-            return []
+        # 如果文本为空或长度小于等于chunk_size，直接返回原文本
+        if not text or len(text) <= chunk_size:
+            return [text]
         
-        chunks = []
-        start = 0
-        text_length = len(text)
+        # 使用unstructured的chunk_by_title进行分割
+        # 首先创建一个临时的Text元素
+        elements = [Text(text=text)]
         
-        while start < text_length:
-            end = start + chunk_size
-            # 如果不是最后一个块，确保在句子结束处分割
-            if end < text_length:
-                # 寻找最近的句号、问号或感叹号
-                punctuation_positions = [text.rfind(p, start, end) for p in ['.', '?', '!']]
-                valid_positions = [pos for pos in punctuation_positions if pos > start + chunk_size * 0.5]
-                
-                if valid_positions:
-                    end = max(valid_positions) + 1
-            
-            chunks.append(text[start:end].strip())
-            start = end - chunk_overlap
-            
-            # 防止无限循环
-            if start >= text_length or start >= end:
-                break
+        # 进行分块，使用chunk_size和chunk_overlap参数
+        # 注意：unstructured的chunk_by_title方法不直接支持overlap参数
+        # 我们会在分块后手动处理重叠逻辑
+        chunks = chunk_by_title(
+            elements=elements,
+            max_characters=chunk_size,
+            combine_text_under_n_chars=int(chunk_size * 0.8),  # 合并小于chunk_size 80%的块
+        )
         
-        return chunks
+        # 提取文本内容
+        text_chunks = [chunk.text for chunk in chunks]
+        
+        # 手动处理重叠逻辑
+        if chunk_overlap > 0 and len(text_chunks) > 1:
+            overlapped_chunks = []
+            for i in range(len(text_chunks)):
+                if i > 0:
+                    # 为当前块添加前一个块的末尾重叠部分
+                    prev_chunk = text_chunks[i-1]
+                    overlap_text = prev_chunk[-chunk_overlap:] if len(prev_chunk) >= chunk_overlap else prev_chunk
+                    overlapped_chunks.append(overlap_text + text_chunks[i])
+                else:
+                    # 第一个块保持不变
+                    overlapped_chunks.append(text_chunks[i])
+            text_chunks = overlapped_chunks
+        
+        # 清理空块
+        text_chunks = [chunk.strip() for chunk in text_chunks if chunk.strip()]
+        
+        return text_chunks
 
 
 class SimpleDocumentProcessor(DocumentProcessor):
     """
-    简单的文档处理器，支持处理多种类型的文档
+    简单的文档处理器，使用unstructured包处理文档
+    目前仅支持.md和.txt格式
     """
     
     def __init__(self, splitter: Optional[DocumentSplitter] = None):
         """
         初始化文档处理器
         
-        @param splitter: 文档分割器，默认为SimpleTextSplitter
+        Args:
+            splitter: 文档分割器，如果为None，则使用默认的SimpleTextSplitter
         """
         self.splitter = splitter or SimpleTextSplitter()
     
-    def process(self, content: str, **kwargs) -> List[Dict[str, Any]]:
+    def load(self, file_path: str) -> str:
         """
-        处理文档内容
+        加载文档内容
         
-        @param content: 文档内容字符串
-        @param kwargs: 处理参数，会传递给分割器
-        @return: 处理后的文档块列表
-        """
-        if not content:
-            return []
+        Args:
+            file_path: 文档路径
         
-        # 使用分割器分割内容
-        chunks = self.splitter.split(content, **kwargs)
-        
-        # 为每个块创建元数据
-        processed_chunks = []
-        for i, chunk in enumerate(chunks):
-            if chunk.strip():
-                processed_chunks.append({
-                    "id": f"chunk_{i}",
-                    "content": chunk,
-                    "metadata": {
-                        "chunk_index": i,
-                        "chunk_size": len(chunk)
-                    }
-                })
-        
-        return processed_chunks
-    
-    def load(self, file_path: str, **kwargs) -> List[Dict[str, Any]]:
-        """
-        从文件加载并处理文档
-        
-        @param file_path: 文件路径
-        @param kwargs: 处理参数，会传递给process方法
-        @return: 处理后的文档块列表
+        Returns:
+            文档内容
         """
         file_path = Path(file_path)
-        if not file_path.exists():
-            raise FileNotFoundError(f"文件不存在: {file_path}")
-        
         file_ext = file_path.suffix.lower()
-        content = ""
         
-        try:
-            if file_ext == '.txt':
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-            elif file_ext == '.pdf':
-                content = self._read_pdf(file_path)
-            elif file_ext == '.docx':
-                content = self._read_docx(file_path)
-            else:
-                raise ValueError(f"不支持的文件格式: {file_ext}")
-            
-            # 处理文档内容
-            return self.process(content, **kwargs)
-        except Exception as e:
-            raise RuntimeError(f"加载文件时出错: {str(e)}")
+        # 支持的文件类型
+        if file_ext == '.txt':
+            elements = partition_text(str(file_path))
+        elif file_ext == '.md':
+            elements = partition_md(str(file_path))
+        else:
+            raise ValueError(f"目前仅支持.md和.txt格式的文件，不支持: {file_ext}")
+        
+        # 提取文本内容
+        text = "\n".join([element.text for element in elements])
+        return text
     
-    def _read_pdf(self, file_path: Path) -> str:
+    def process(self, file_path_or_content: str, chunk_size: int = 500, chunk_overlap: int = 50, is_content: bool = False) -> List[str]:
         """
-        读取PDF文件内容
+        处理文档，包括加载和分割
         
-        @param file_path: PDF文件路径
-        @return: 提取的文本内容
+        Args:
+            file_path_or_content: 文档路径或文档内容
+            chunk_size: 块大小
+            chunk_overlap: 块重叠大小
+            is_content: 如果为True，则file_path_or_content被视为内容而非文件路径
+        
+        Returns:
+            分割后的文档块列表
         """
-        content = []
-        with open(file_path, 'rb') as f:
-            reader = PyPDF2.PdfReader(f)
-            for page_num in range(len(reader.pages)):
-                page = reader.pages[page_num]
-                content.append(page.extract_text())
-        
-        return '\n'.join(content)
-    
-    def _read_docx(self, file_path: Path) -> str:
-        """
-        读取DOCX文件内容
-        
-        @param file_path: DOCX文件路径
-        @return: 提取的文本内容
-        """
-        doc = docx.Document(file_path)
-        content = []
-        for paragraph in doc.paragraphs:
-            content.append(paragraph.text)
-        
-        return '\n'.join(content)
+        if is_content:
+            text = file_path_or_content
+        else:
+            text = self.load(file_path_or_content)
+        return self.splitter.split(text, chunk_size=chunk_size, chunk_overlap=chunk_overlap)

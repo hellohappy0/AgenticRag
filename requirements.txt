@@ -10,6 +10,7 @@ pydantic==2.11.9
 tiktoken==0.11.0
 PyPDF2==3.0.0
 python-docx==1.2.0
+unstructured[txt,md]==0.14.6
 
 # 网络请求
 requests==2.32.5

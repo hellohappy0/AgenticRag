@@ -1,6 +1,7 @@
 import numpy as np
 import requests
 import json
+import numpy as np
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from src.config import get_config

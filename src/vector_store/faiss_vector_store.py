@@ -1,5 +1,5 @@
-import numpy as np
 import faiss
+import numpy as np
 from typing import List, Dict, Any, Optional
 import logging
 

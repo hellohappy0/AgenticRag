@@ -216,6 +216,11 @@ class AgenticRAG(BaseAgent):
         tool_call_count = 0
         
         try:
+            # 确保state中包含必要的键
+            if 'iterations' not in state:
+                state['iterations'] = 0
+                logger.warning("State 'iterations' key missing, initializing to 0")
+                
             while tool_call_count < self.max_tool_calls:
                 print("="*60)
                 print(f"【迭代步骤 {state['iterations'] + 1}】开始处理")
@@ -457,9 +462,12 @@ class AgenticRAG(BaseAgent):
                     state["status"] = "error"
                     state["error"] = f"Max tool calls reached and fallback generation failed: {str(e)}"
         except Exception as e:
-            logger.error(f"Fatal error in agent loop: {str(e)}")
+            logger.error(f"Fatal error in agent loop: {type(e).__name__}: {str(e)}")
             state["status"] = "error"
-            state["error"] = f"Agent loop failed: {str(e)}"
+            state["error"] = f"Agent loop failed: {type(e).__name__}: {str(e)}"
+            # 确保即使出错，返回的状态中也有iterations字段
+            if 'iterations' not in state:
+                state['iterations'] = 0
         
         return state
     
