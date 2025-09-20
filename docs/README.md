@@ -17,15 +17,15 @@ MyAgenticRAG/
 └── src/
     ├── config.py        # 配置管理模块
     ├── agent/           # 代理模块
-    │   ├── agent.py         # 代理核心逻辑
-    │   └── agent_builder.py # 代理构建器
+    │   ├── agent_refactored.py # 代理核心逻辑(重构版)
+    │   └── agent_builder.py    # 代理构建器
     ├── tools/           # 工具模块
     │   ├── base_tool.py       # 工具基类
     │   └── retrieval_tool.py  # 检索工具实现
     ├── doc_process/     # 文档处理模块
     │   ├── base_processor.py   # 文档处理器基类
     │   └── simple_processor.py # 简单文档处理器实现
-    ├── agent_context.py # 代理上下文和记忆管理
+    ├── agent_context/   # 代理上下文和记忆管理
     ├── prompt/          # 提示模板管理模块
     │   ├── prompt_manager.py   # 提示管理器实现
     │   ├── template_loader.py  # 模板加载器实现
@@ -133,7 +133,7 @@ python main.py
 ### 2. 代理模块 (agent/)
 
 #### agent.py
-实现了AgenticRAG类，是整个系统的核心，负责协调各个组件完成任务。包含查询分析、代理循环、工具调用、答案评估和优化等核心逻辑。
+实现了AgenticRAG类，是整个系统的核心，采用高内聚低耦合的设计，负责协调各个组件完成任务。包含查询分析、代理循环、工具调用、答案评估和优化等核心逻辑。基于smolAgents框架重构后，代码结构更清晰，功能更强大。
 
 #### agent_builder.py
 提供了创建AgenticRAG实例的便捷函数，负责组装各个组件（模型、工具、文档处理器等）。

@@ -2,10 +2,11 @@
 Agent Builder模块，负责创建和初始化Agentic RAG系统
 """
 from typing import Dict, List, Any, Optional
-from src.agent import AgenticRAG
-from src.tools import RetrievalTool, SearchTool, DuckDuckGoSearchEngine
+from src.agent.agent_refactored import AgenticRAG
+from src.tools import RetrievalTool, SearchTool, DuckDuckGoSearchTool
 from src.doc_process import SimpleDocumentProcessor
-from src.agent_context import SimpleAgentEnvironment, SmolAgentMemoryManager
+from src.agent_context.agent_env import AgentEnvironment, SimpleAgentEnvironment
+from src.memory.smol_memory_manager import SmolAgentMemoryManager
 from src.prompt import AgentPromptTemplates
 from src.model import ModelFactory
 from src.config import get_config
@@ -98,8 +99,7 @@ def create_agentic_rag(model_type: str = "mock", api_key: str = None, custom_mod
     
     # 尝试创建网络搜索工具（如果ddgs库可用）
     try:
-        search_engine = DuckDuckGoSearchEngine()
-        search_tool = SearchTool(search_engine)
+        search_tool = DuckDuckGoSearchTool()
         tools.append(search_tool)
         print("成功初始化网络搜索工具")
     except ImportError as e:
@@ -157,10 +157,8 @@ def create_agentic_rag(model_type: str = "mock", api_key: str = None, custom_mod
         tools=tools,
         document_processor=document_processor,
         environment=environment,
-        prompt_manager=prompt_manager,
         memory_manager=memory_manager,
-        max_retries=3,
-        max_tool_calls=5
+        prompt_manager=prompt_manager
     )
     
     return agentic_rag

@@ -1,9 +1,16 @@
 """
-工具模块，提供各种可供代理使用的功能工具
+工具模块，集成了smolagents框架的各种功能工具
 """
 
 from .base_tool import BaseTool, ToolError
 from .retrieval_tool import RetrievalTool, SearchTool
-from .search_engine import DuckDuckGoSearchEngine
+from .search_engine import DuckDuckGoSearchTool
 
-__all__ = ["BaseTool", "ToolError", "RetrievalTool", "SearchTool", "DuckDuckGoSearchEngine"]
+# 导出所有工具类
+__all__ = [
+    "BaseTool",
+    "ToolError",
+    "RetrievalTool",
+    "SearchTool",
+    "DuckDuckGoSearchTool"
+]

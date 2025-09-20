@@ -1,1 +1,2 @@
 尽可能使用smolAgents框架写代码，“smolagents的说明手册”知识库中包含了smolAgents的相关介绍，如果某些细节不够清楚，应该访问.venv\Lib\site-packages\smolagents\确认，不要从零创建
+严禁在代码中添加mock或模拟的返回值或入参，包括单元测试也不允许mock

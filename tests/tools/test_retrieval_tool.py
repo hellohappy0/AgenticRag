@@ -26,7 +26,7 @@ class TestRetrievalTool(unittest.TestCase):
         self.mock_vector_store.search.return_value = mock_results
         
         # 执行检索
-        result = self.retrieval_tool.run("测试查询", top_k=2)
+        result = self.retrieval_tool("测试查询", top_k=2)
         
         # 验证结果
         self.assertEqual(result["status"], "success")
@@ -44,7 +44,7 @@ class TestRetrievalTool(unittest.TestCase):
         self.mock_vector_store.search.return_value = mock_results
         
         # 执行检索，不指定top_k
-        result = self.retrieval_tool.run("测试查询")
+        result = self.retrieval_tool("测试查询")
         
         # 验证向量存储的search方法被调用时使用了默认的top_k=3
         self.mock_vector_store.search.assert_called_once_with("测试查询", top_k=3)
@@ -52,23 +52,23 @@ class TestRetrievalTool(unittest.TestCase):
     def test_run_with_empty_query(self):
         """测试使用空查询时应该抛出异常"""
         with self.assertRaises(ToolError):
-            self.retrieval_tool.run("")
+            self.retrieval_tool("")
     
     def test_run_with_invalid_query_type(self):
         """测试使用非字符串类型的查询时应该抛出异常"""
         with self.assertRaises(ToolError):
-            self.retrieval_tool.run(123)
+            self.retrieval_tool(123)
     
     def test_run_with_invalid_top_k(self):
         """测试使用无效的top_k值时应该抛出异常"""
         with self.assertRaises(ToolError):
-            self.retrieval_tool.run("测试查询", top_k=0)
+            self.retrieval_tool("测试查询", top_k=0)
         
         with self.assertRaises(ToolError):
-            self.retrieval_tool.run("测试查询", top_k=-1)
+            self.retrieval_tool("测试查询", top_k=-1)
         
         with self.assertRaises(ToolError):
-            self.retrieval_tool.run("测试查询", top_k="invalid")
+            self.retrieval_tool("测试查询", top_k="invalid")
     
     def test_run_with_vector_store_error(self):
         """测试当向量存储出现错误时应该正确处理异常"""
@@ -76,7 +76,7 @@ class TestRetrievalTool(unittest.TestCase):
         self.mock_vector_store.search.side_effect = Exception("向量存储错误")
         
         with self.assertRaises(ToolError) as context:
-            self.retrieval_tool.run("测试查询")
+            self.retrieval_tool("测试查询")
         
         # 验证异常消息包含原始错误信息
         self.assertIn("向量存储错误", str(context.exception))

@@ -1,0 +1,26 @@
+{
+  "answer": "",
+  "status": "failed",
+  "context": "工具[retrieve_documents]结果: {'status': 'success', 'query': '智能助手工具选择决策流程', 'results': [{'id': 'PROMPT_MODULE_DOCUMENTATION_chunk_3', 'content': 'reate_prompt_manager(): 创建并返回一个配置好的PromptManager实例4. 提示模板详解\\n4.1 main.txt\\n主代理提示模板，用于指导代理的整体行为和决策过程。\\n主要用途：\\n- 定义代理的角色和任务\\n- 提供工具使用的指导原则\\n- 指导代理的决策流程\\n- 包含迭代优化的相关指示\\n- 考虑工具使用历史记录\\n主要参数：\\n- query: 用户查询\\n- context: 上下文信息\\n- tools: 可用工具列表\\n- last_evaluation: 上一次评估结果\\n- optimization_plan: 优化计划\\n- tool_usage_history: 历史工具使用记录（包含工具名称、查询和结果质量）\\n4.2 iteration_optimization.txt\\n迭代优化专家提示模板，\n工具[retrieve_documents]结果: {'status': 'success', 'query': '人工智能最新发展', 'results': [{'id': 'PROMPT_MODULE_DOCUMENTATION_chunk_5', 'content': '系统地分析解决问题的过程。\\n主要用途：\\n- 反思决策过程\\n- 评估工具使用效果\\n- 分析信息处理方式- 评估回答质量\\n主要参数：\\n- query: 用户问题\\n- thought_process: 思考过程\\n4.7 self_critique.txt\\n自我批评提示模板，用于严格检查AI生成的回答质量。\\n主要用途：\\n- 评估回答的准确性\\n- 评估回答的完整性\\n- 评估回答的相关性\\n- 评估回答的清晰度\\n- 提出具体的修改建议\\n主要参数：\\n- answer: 原始回答\\n- query: 用户问题\\n- context: 上下文信息\\n5. 在Agent中的使用\\n在AgenticRAG类中，提示模块的使用主要体现在以下几个方面：\\n查询分析：使用query_rewrite模板分析和优化用户查询\\n   python\\n   query\n工具[retrieve_documents]结果: {'status': 'success', 'query': '人工智能发展历史', 'results': [{'id': 'PROMPT_MODULE_DOCUMENTATION_chunk_7', 'content': ') if state.get(\"tool_usage_history\") else \"无\"\\n   )答案生成：使用rag_answer模板基于上下文生成回答\\n   python\\n   answer_prompt = self.prompt_manager.generate_prompt(\\n       \"rag_answer\",\\n       query=state[\"query\"],\\n       context=state[\"context\"]\\n   )\\n答案评估：使用answer_evaluation模板评估生成的回答\\n   python\\n   evaluation_prompt = self.prompt_manager.generate_prompt(\\n       \"answer_evaluation\",\\n       quer",
+  "iterations": 3,
+  "tool_usage": [
+    {
+      "name": "retrieve_documents",
+      "parameters": {
+        "query": "智能助手工具选择决策流程"
+      }
+    },
+    {
+      "name": "retrieve_documents",
+      "parameters": {
+        "query": "人工智能最新发展"
+      }
+    },
+    {
+      "name": "retrieve_documents",
+      "parameters": {
+        "query": "人工智能发展历史"
+      }
+    }
+  ]
+}

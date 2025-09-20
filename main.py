@@ -62,8 +62,8 @@ def main():
             print(result.get("answer", "没有生成回答"))
             print("\n=== 状态 ===")
             print(f"状态: {result.get('status', 'unknown')}")
-            print(f"工具调用次数: {len(result.get('tool_calls', []))}")
-            print(f"重试次数: {result.get('retries', 0)}")
+            print(f"工具调用次数: {len(result.get('tool_usage', []))}")
+            print(f"迭代次数: {result.get('iterations', 0)}")
             
             # 如果有自我批评，也显示
             if "critique" in result:
